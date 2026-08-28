@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel,validator,field_validator
 app = FastAPI()
 
-class Item(BaseModel):
+class Issue(BaseModel):
     name :str
     feito : bool = False
     id_issue : int
@@ -24,7 +24,13 @@ class Item(BaseModel):
 async def root():
     return {"message": "Hello World"}
 
-
+lista_issue = []
 #async def get_item():
+@app.post("/postarissue")
+async def adicionar_issue(issue:Issue):
+    lista_issue.append(issue)
+    return {"Lista adicionar com sucesso":issue, "tamanho lista":len(lista_issue)}
 
-
+@app.get("/issue")
+async def imprimir_issue():
+    return {"Issues" : lista_issue}
