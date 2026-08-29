@@ -4,7 +4,6 @@ from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel,validator,field_validator
 from sqlmodel import Field, SQLModel, create_engine, Session,select
 from sqlmodel.orm import session
-
 app = FastAPI()
 
 #sqlmodel ja coloca Base automaticamente
@@ -60,8 +59,7 @@ async def imprimir_issue():
 @app.get("/issue/{id_issue}")
 async def retornar_issue(id_issue:int):
     with Session(engine) as session:
-        info = select(Issue).where(Issue.id_issue==id_issue)
-        result = session.exec(info).first()
-        if not result:
+        info = session.get(Issue,id_issue) # troque para get,aparentemente é mais rapido que o outro
+        if not info:
             raise HTTPException(status_code=404,detail ="id not found")
-        return {"Issue: ",result}
+        return {"Issue: ",info.id_issue} # problema de usar de tipo Issue não é valido em retorno
