@@ -2,7 +2,9 @@ import sqlmodel
 import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel,validator,field_validator
-from sqlmodel import Field, SQLModel, create_engine
+from sqlmodel import Field, SQLModel, create_engine, Session,select
+from sqlmodel.orm import session
+
 app = FastAPI()
 
 #sqlmodel ja coloca Base automaticamente
@@ -10,6 +12,7 @@ class Issue(SQLModel,table =True):
     id_issue : int | None = Field(default=None, primary_key=True)
     name :str
     feito : bool = False
+
    # validator é redutante para pydantic  V2
    # @validator('id_issue')
     #def id_issue_validator(cls,value):
@@ -28,7 +31,9 @@ sqlite_url = f"sqlite:///{sqlite_file_name}"
 
 engine = create_engine(sqlite_url, echo=True) # echo para imprimerir tutod que sql faz
 
-SQLModel.metadata.create_all(engine)
+
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -37,9 +42,17 @@ lista_issue = []
 #async def get_item():
 @app.post("/postarissue")
 async def adicionar_issue(issue:Issue):
-    lista_issue.append(issue)
-    return {"Lista adicionar com sucesso":issue, "tamanho lista":len(lista_issue)}
+    create_db_and_tables()
+    with(Session(engine) as session):
+        session.add(issue)
+        session.commit()
+        session.refresh(issue)
+        session.close()
+    return {"Lista adicionar com sucesso":issue}
 
 @app.get("/issue")
 async def imprimir_issue():
-    return {"Issues" : lista_issue}
+    with(Session(engine) as session):
+        info = select(Issue)
+        result = session.exec(info)
+    return {"Issues" : result}
