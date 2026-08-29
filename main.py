@@ -1,12 +1,15 @@
+import sqlmodel
 import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel,validator,field_validator
+from sqlmodel import Field, SQLModel, create_engine
 app = FastAPI()
 
-class Issue(BaseModel):
+#sqlmodel ja coloca Base automaticamente
+class Issue(SQLModel,table =True):
+    id_issue : int | None = Field(default=None, primary_key=True)
     name :str
     feito : bool = False
-    id_issue : int
    # validator é redutante para pydantic  V2
    # @validator('id_issue')
     #def id_issue_validator(cls,value):
@@ -15,11 +18,17 @@ class Issue(BaseModel):
        # return value
     @field_validator("id_issue")
     @classmethod
-    def check_id_issue(cls, n:int):
+    def check_id_issue(cls, n:int | None):
         if n <= 0:
             raise ValueError("id_issue must be greater than 0")
         return n
 
+sqlite_file_name = "database.db"
+sqlite_url = f"sqlite:///{sqlite_file_name}"
+
+engine = create_engine(sqlite_url, echo=True) # echo para imprimerir tutod que sql faz
+
+SQLModel.metadata.create_all(engine)
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
