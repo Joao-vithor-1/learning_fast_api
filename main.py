@@ -1,6 +1,6 @@
 import sqlmodel
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel,validator,field_validator
 from sqlmodel import Field, SQLModel, create_engine, Session,select
 from sqlmodel.orm import session
@@ -47,12 +47,21 @@ async def adicionar_issue(issue:Issue):
         session.add(issue)
         session.commit()
         session.refresh(issue)
-        session.close()
-    return {"Lista adicionar com sucesso":issue}
+        return {"Lista adicionar com sucesso":issue}
 
 @app.get("/issue")
 async def imprimir_issue():
+    #arrumar essa funcao depois,ela nao "printa" nada
     with(Session(engine) as session):
         info = select(Issue)
-        result = session.exec(info)
+        result = session.exec(info).all() #aparantemente o all converter o tipo para o python ler
     return {"Issues" : result}
+
+@app.get("/issue/{id_issue}")
+async def retornar_issue(id_issue:int):
+    with Session(engine) as session:
+        info = select(Issue).where(Issue.id_issue==id_issue)
+        result = session.exec(info).first()
+        if not result:
+            raise HTTPException(status_code=404,detail ="id not found")
+        return {"Issue: ",result}
