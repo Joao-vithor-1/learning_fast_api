@@ -25,7 +25,7 @@ class Issue(SQLModel,table =True):
             raise ValueError("id_issue must be greater than 0")
         return n
 
-class Issueupdate(SQLModel,table = True):
+class Issueupdate(SQLModel):
     id_issue: int | None
     name: str | None
     feito: bool  | None
