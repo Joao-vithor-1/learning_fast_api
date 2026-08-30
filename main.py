@@ -81,3 +81,12 @@ async def updateIssue(idIssue :int,issueUpdate: Issueupdate):
         session.commit()
         session.refresh(db_issue)
         return db_issue
+@app.delete("/deleteIssue/{idIssue}")
+async def deleteIssue(idIssue : int):
+    with Session(engine) as session:
+        db_delete = session.get(Issue,idIssue)
+        if not db_delete:
+            raise HTTPException(status_code=404,detail = "Issue not found")
+        session.delete(db_delete)
+        session.commit()
+        return{"ok":True}
