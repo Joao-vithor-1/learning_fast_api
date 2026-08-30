@@ -63,3 +63,15 @@ async def retornar_issue(id_issue:int):
         if not info:
             raise HTTPException(status_code=404,detail ="id not found")
         return {"Issue: ",info.id_issue} # problema de usar de tipo Issue não é valido em retorno
+@app.patch("/issue/changeissue/{idIssue}",response_model = Issue)
+async def updateIssue(idIssue :int):
+    with Session(engine) as session:
+        db_issue = session.get(Issue,idIssue)
+        if not db_issue:
+            raise HTTPException(status_code=404,detail ="id not found")
+        issue_update = db_issue.model_dump()
+        db_issue.sqlmodel_update(issue_update)
+        session.add(db_issue)
+        session.commit()
+        session.refresh(db_issue)
+        return issue_update
