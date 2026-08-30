@@ -25,6 +25,12 @@ class Issue(SQLModel,table =True):
             raise ValueError("id_issue must be greater than 0")
         return n
 
+class Issueupdate(SQLModel,table = True):
+    id_issue: int | None
+    name: str | None
+    feito: bool  | None
+    
+
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
@@ -63,15 +69,15 @@ async def retornar_issue(id_issue:int):
         if not info:
             raise HTTPException(status_code=404,detail ="id not found")
         return {"Issue: ",info.id_issue} # problema de usar de tipo Issue não é valido em retorno
-@app.patch("/issue/changeissue/{idIssue}",response_model = Issue)
-async def updateIssue(idIssue :int):
+@app.patch("/issue/changeissue/{idIssue}",response_model = Issueupdate)
+async def updateIssue(idIssue :int,issueUpdate: Issueupdate):
     with Session(engine) as session:
         db_issue = session.get(Issue,idIssue)
         if not db_issue:
             raise HTTPException(status_code=404,detail ="id not found")
-        issue_update = db_issue.model_dump()
-        db_issue.sqlmodel_update(issue_update)
+        dataupdate = issueUpdate.model_dump(exclude_unset=True) #eclude_unset ignora valores Null
+        db_issue.sqlmodel_update(dataupdate)
         session.add(db_issue)
         session.commit()
         session.refresh(db_issue)
-        return issue_update
+        return db_issue
